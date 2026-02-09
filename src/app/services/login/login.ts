@@ -5,7 +5,7 @@ import { LoginDto } from '../../interfaces/loginDto';
 @Injectable({ providedIn: 'root' })
 export class LoginService {
   doLogin(dto: LoginDto): Observable<{ ok: boolean; token?: string; user?: { username: string } }> {
-    const DEMO = { username: 'demo', password: '123456' };
+    const DEMO = { username: 'grupo4', password: '123456' };
 
     // Simulación de latencia de red (500 ms)
     if (dto.username === DEMO.username && dto.password === DEMO.password) {
