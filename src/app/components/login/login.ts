@@ -1,23 +1,25 @@
 import { Component, inject } from '@angular/core';
-import { LoginService } from '../../services/login/login';
-import { LoginDto } from '../../interfaces/loginDto';
-import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';     
+import { FormsModule, NgForm } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+
+import { LoginService } from '../../services/login/login';
+import { LoginDto } from '../../interfaces/loginDto';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
+    CommonModule,               
     FormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule
-    // Ya no necesitas CommonModule ni MatIconModule
   ],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrls: ['./login.css'],
 })
 export class Login {
   private loginService = inject(LoginService);
@@ -25,21 +27,44 @@ export class Login {
   username: string = '';
   password: string = '';
 
-  login() {
-    console.log('Usuario:', this.username);
-    console.log('Password:', this.password);
-
-    if (this.username !== '' && this.password !== '') {
-      const objectRequest: LoginDto = {
+  login(form?: NgForm) {
+    if (form && form.invalid) {
+      console.error('[VALIDACIÓN] Formulario inválido:', {
         username: this.username,
-        password: this.password 
-      };
-
-      this.loginService.doLogin(objectRequest).subscribe(entry => {
-        if (entry) {
-          console.log("login exitoso");
-        }
+        password: this.password ? '***' : '(vacío)'
       });
+
+      const uCtrl = form.controls['username'];
+      const pCtrl = form.controls['password'];
+
+      if (uCtrl?.errors) {
+        if (uCtrl.errors['required']) console.error('[ERROR] Username requerido.');
+        if (uCtrl.errors['minlength']) console.error(
+          `[ERROR] Username demasiado corto (min ${uCtrl.errors['minlength'].requiredLength}).`
+        );
+      }
+      if (pCtrl?.errors) {
+        if (pCtrl.errors['required']) console.error('[ERROR] Password requerido.');
+        if (pCtrl.errors['minlength']) console.error(
+          `[ERROR] Password demasiado corta (min ${pCtrl.errors['minlength'].requiredLength}).`
+        );
+      }
+      return;
     }
+
+    if (!this.username || !this.password) {
+      console.error('[VALIDACIÓN] Debes completar usuario y contraseña.');
+      return;
+    }
+
+    const objectRequest: LoginDto = {
+      username: this.username,
+      password: this.password
+    };
+
+    this.loginService.doLogin(objectRequest).subscribe({
+      next: (entry) => { if (entry) console.info('[OK] Login exitoso'); },
+      error: (err) => console.error('[ERROR BACKEND FAKE]', err)
+    });
   }
 }
